@@ -11,19 +11,19 @@ public interface FlightBooking {
 
   @WebMethod
   int bookFlight(
-          @WebParam(name = "user_number") int user_number,
+          @WebParam(name = "username") String username,
           @WebParam(name = "flight_number") int flight_number
   );
 
   @WebMethod
   void cancelFlight(
-          @WebParam(name = "user_number") int user_number,
+          @WebParam(name = "username") String username,
           @WebParam(name = "flight_number") int flight_number
   );
 
   @WebMethod
   void rescheduleFlight(
-          @WebParam(name = "user_number") int user_number,
+          @WebParam(name = "username") String username,
           @WebParam(name = "old_flight_number") int old_flight_number,
           @WebParam(name = "new_flight_number") int new_flight_number
   );
