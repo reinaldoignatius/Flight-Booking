@@ -5,17 +5,17 @@ import javax.jws.WebService;
 @WebService(endpointInterface = "services.flight_booking.FlightBooking")
 public class FlightBookingImpl implements FlightBooking {
 
-  public void bookFlight(int user_id, int flight_id) {
+  public int bookFlight(int user_number, int flight_number) {
+    return 0;
+  }
+
+  public void cancelFlight(int user_number, int flight_number) {
 
   }
 
-  public void cancelFlight(int user_id, int flight_id) {
-
-  }
-
-  public void rescheduleFlight(int user_id, int old_flight_id, int new_flight_id) {
-    cancelFlight(user_id, old_flight_id);
-    bookFlight(user_id, new_flight_id);
+  public void rescheduleFlight(int user_number, int old_flight_number, int new_flight_number) {
+    cancelFlight(user_number, old_flight_number);
+    bookFlight(user_number, new_flight_number);
   }
 
 }

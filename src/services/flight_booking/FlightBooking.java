@@ -10,22 +10,22 @@ import javax.jws.soap.SOAPBinding;
 public interface FlightBooking {
 
   @WebMethod
-  void bookFlight(
-          @WebParam(name = "user_id") int user_id,
-          @WebParam(name = "flight_id") int flight_id
+  int bookFlight(
+          @WebParam(name = "user_number") int user_number,
+          @WebParam(name = "flight_number") int flight_number
   );
 
   @WebMethod
   void cancelFlight(
-          @WebParam(name = "user_id") int user_id,
-          @WebParam(name = "flight_id") int flight_id
+          @WebParam(name = "user_number") int user_number,
+          @WebParam(name = "flight_number") int flight_number
   );
 
   @WebMethod
   void rescheduleFlight(
-          @WebParam(name = "user_id") int user_id,
-          @WebParam(name = "old_flight_id") int old_flight_id,
-          @WebParam(name = "new_flight_id") int new_flight_id
+          @WebParam(name = "user_number") int user_number,
+          @WebParam(name = "old_flight_number") int old_flight_number,
+          @WebParam(name = "new_flight_number") int new_flight_number
   );
 
 }
