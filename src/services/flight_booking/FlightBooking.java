@@ -12,21 +12,19 @@ public interface FlightBooking {
   @WebMethod
   String bookFlight(
           @WebParam(name = "username")String username,
-          @WebParam(name = "flight_number")String flight_number,
+          @WebParam(name = "flight_number")String flightNumber,
           @WebParam(name = "passengers")Passenger[] passengers
   );
 
   @WebMethod
   void cancelBooking(
-          @WebParam(name = "username")String username,
-          @WebParam(name = "flight_number")String booking_number
+          @WebParam(name = "booking_number")String bookingNumber
   );
 
   @WebMethod
   void rescheduleFlight(
-          @WebParam(name = "username")String username,
-          @WebParam(name = "old_flight_number")String old_flight_number,
-          @WebParam(name = "new_flight_number")String new_flight_number
+          @WebParam(name = "booking_number")String bookingNumber,
+          @WebParam(name = "new_flight_number")String newFlightNumber
   );
 
 }
