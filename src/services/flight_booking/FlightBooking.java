@@ -1,8 +1,5 @@
 package services.flight_booking;
 
-import javafx.util.Pair;
-import org.json.JSONString;
-
 import javax.jws.WebMethod;
 import javax.jws.WebParam;
 import javax.jws.WebService;
@@ -13,10 +10,10 @@ import javax.jws.soap.SOAPBinding;
 public interface FlightBooking {
 
   @WebMethod
-  int bookFlight(
+  String bookFlight(
           @WebParam(name = "username")String username,
           @WebParam(name = "flight_number")String flight_number,
-          @WebParam(name = "passengers")String[] passengers
+          @WebParam(name = "passengers")Passenger[] passengers
   );
 
   @WebMethod
