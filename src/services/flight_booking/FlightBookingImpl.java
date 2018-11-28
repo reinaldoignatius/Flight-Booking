@@ -20,12 +20,13 @@ import java.util.HashMap;
 public class FlightBookingImpl implements FlightBooking {
   public static final String HOST = "http://167.205.35.219:8080";
 
-  public String bookFlight(String username, String flightNumber, Passenger[] passengers) {
+  public String bookFlight(String username, String flightNumber, Passenger[] passengers, String eventId) {
     try {
       HashMap<String, Object> variables = new HashMap<>();
       variables.put("username", new CamundaItem(username, "string"));
       variables.put("flight_number", new CamundaItem(flightNumber, "string"));
       variables.put("passengers", new CamundaItem(passengers, "string"));
+      variables.put("event_id", new CamundaItem(eventId, "string");
 
       HashMap<String, HashMap<String, Object>> requestObject = new HashMap<>();
       requestObject.put("variables", variables);

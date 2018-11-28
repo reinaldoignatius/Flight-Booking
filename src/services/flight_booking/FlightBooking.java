@@ -13,7 +13,8 @@ public interface FlightBooking {
   String bookFlight(
           @WebParam(name = "username")String username,
           @WebParam(name = "flight_number")String flightNumber,
-          @WebParam(name = "passengers")Passenger[] passengers
+          @WebParam(name = "passengers")Passenger[] passengers,
+          @WebParam(name = "event_id")String eventId,
   );
 
   @WebMethod
