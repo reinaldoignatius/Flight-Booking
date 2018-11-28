@@ -1,5 +1,8 @@
 package services.flight_booking;
 
+import com.fasterxml.jackson.databind.JsonSerializer;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.PropertyNamingStrategy;
 import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.JsonNode;
 import com.mashape.unirest.http.Unirest;
@@ -9,7 +12,9 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import javax.jws.WebService;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 
 @WebService(endpointInterface = "services.flight_booking.FlightBooking")
 public class FlightBookingImpl implements FlightBooking {
@@ -17,29 +22,22 @@ public class FlightBookingImpl implements FlightBooking {
 
   public String bookFlight(String username, String flightNumber, Passenger[] passengers) {
     try {
-      JSONObject variables = new JSONObject();
-      variables.append("username", new JSONObject());
-      variables.getJSONObject("username").append("value", username);
-      variables.getJSONObject("username").append("type", "string");
+      HashMap<String, Object> variables = new HashMap<>();
+      variables.put("username", new CamundaItem(username, "string"));
+      variables.put("flight_number", new CamundaItem(flightNumber, "string"));
+      variables.put("passengers", new CamundaItem(passengers, "string"));
 
-      variables.append("flight_number", new JSONObject());
-      variables.getJSONObject("flight_number").append("value", flightNumber);
-      variables.getJSONObject("flight_number").append("type", "string");
+      HashMap<String, HashMap<String, Object>> requestObject = new HashMap<>();
+      requestObject.put("variables", variables);
+      ObjectMapper objectMapper = new ObjectMapper();
+      objectMapper.setPropertyNamingStrategy(PropertyNamingStrategy.CAMEL_CASE_TO_LOWER_CASE_WITH_UNDERSCORES);
 
-      variables.append("passengers",new JSONObject());
-      variables.getJSONObject("passengers").append("value", new JSONArray());
-      variables.getJSONObject("passengers").append("type", "string");
+      String serialized = objectMapper.writeValueAsString(requestObject);
 
-      for (Passenger passenger: passengers) {
-        variables.getJSONObject("passengers").getJSONObject("value").append("first_name", passenger.getFirstName());
-        variables.getJSONObject("passengers").getJSONObject("value").append("last_name", passenger.getLastName());
-      }
-
-      JSONObject requestObject = new JSONObject();
-      requestObject.append("variables", variables);
       HttpResponse<JsonNode> response = Unirest.post(String.format("%s/engine-rest/process-definition/key/BookFlight/start", HOST))
-              .body(requestObject).asJson();
-
+              .header("Content-Type", "application/json")
+              .body(serialized).asJson();
+      System.out.println(response.getBody());
       return String.format("Booking succeed with number: %s", response.getBody().getObject().getString("id"));
     } catch(Exception e) {
       e.printStackTrace();
@@ -49,17 +47,22 @@ public class FlightBookingImpl implements FlightBooking {
 
   public String cancelBooking(String bookingNumber) {
     try {
-      JSONObject variables = new JSONObject();
+      HashMap<String, Object> variables = new HashMap<>();
+      variables.put("booking_number", new CamundaItem(bookingNumber, "string"));
 
-      variables.append("booking_number", new JSONObject());
-      variables.getJSONObject("booking_number").append("value", bookingNumber);
-      variables.getJSONObject("booking_number").append("type", "string");
+      HashMap<String, Object> requestObject = new HashMap<>();
+      requestObject.put("variables", variables);
+      ObjectMapper objectMapper = new ObjectMapper();
+      objectMapper.setPropertyNamingStrategy(PropertyNamingStrategy.CAMEL_CASE_TO_LOWER_CASE_WITH_UNDERSCORES);
 
-      JSONObject requestObject = new JSONObject();
+      String serialized = objectMapper.writeValueAsString(requestObject);
+
       HttpResponse<JsonNode> response = Unirest.post(String.format(
-              "%s/engine-rest/process-definition/key/CancelBooking/start", HOST)).body(requestObject).asJson();
+              "%s/engine-rest/process-definition/key/CancelBooking/start", HOST))
+              .header("Content-Type", "application/json")
+              .body(serialized).asJson();
 
-      return String.format("Booking success with id: %s", response.getBody().getObject().getString("id"));
+      return String.format("Cancel success with id: %s", response.getBody().getObject().getString("id"));
     } catch(Exception e) {
       e.printStackTrace();
     }
@@ -68,21 +71,22 @@ public class FlightBookingImpl implements FlightBooking {
 
   public String rescheduleFlight(String bookingNumber, String flightNumber) {
     try {
-      JSONObject variables = new JSONObject();
+      HashMap<String, Object> variables = new HashMap<>();
+      variables.put("booking_number", new CamundaItem(bookingNumber, "string"));
+      variables.put("flight_number", new CamundaItem(flightNumber, "string"));
 
-      variables.append("booking_number", new JSONObject());
-      variables.getJSONObject("booking_number").append("value", bookingNumber);
-      variables.getJSONObject("booking_number").append("type", "string");
+      HashMap<String, Object> requestObject = new HashMap<>();
+      requestObject.put("variables", variables);
+      ObjectMapper objectMapper = new ObjectMapper();
+      objectMapper.setPropertyNamingStrategy(PropertyNamingStrategy.CAMEL_CASE_TO_LOWER_CASE_WITH_UNDERSCORES);
+      String serialized = objectMapper.writeValueAsString(requestObject);
 
-      variables.append("flight_number", new JSONObject());
-      variables.getJSONObject("flight_number").append("value", flightNumber);
-      variables.getJSONObject("flight_number").append("type", "string");
-
-      JSONObject requestObject = new JSONObject();
       HttpResponse<JsonNode> response = Unirest.post(String.format(
-              "%s/engine-rest/process-definition/key/RescheduleBooking/start", HOST)).body(requestObject).asJson();
+              "%s/engine-rest/process-definition/key/RescheduleBooking/start", HOST))
+              .header("Content-Type", "application/json")
+              .body(serialized).asJson();
 
-      return String.format("Booking success with id: %s", response.getBody().getObject().getString("id"));
+      return String.format("Booking rescheduled with id: %s", response.getBody().getObject().getString("id"));
     } catch(Exception e) {
       e.printStackTrace();
     }

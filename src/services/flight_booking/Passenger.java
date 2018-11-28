@@ -1,5 +1,7 @@
 package services.flight_booking;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 public class Passenger {
   private String firstName;
   private String lastName;
@@ -19,6 +21,7 @@ public class Passenger {
     this.firstName = firstName;
   }
 
+  @JsonProperty("first_name")
   public String getLastName() {
     return lastName;
   }
