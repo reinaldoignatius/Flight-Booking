@@ -17,14 +17,14 @@ public interface FlightBooking {
   );
 
   @WebMethod
-  void cancelBooking(
+  String cancelBooking(
           @WebParam(name = "booking_number")String bookingNumber
   );
 
   @WebMethod
-  void rescheduleFlight(
+  String rescheduleFlight(
           @WebParam(name = "booking_number")String bookingNumber,
-          @WebParam(name = "new_flight_number")String newFlightNumber
+          @WebParam(name = "flight_number")String flightNumber
   );
 
 }

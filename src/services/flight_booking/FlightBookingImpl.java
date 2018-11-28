@@ -13,236 +13,80 @@ import java.util.Date;
 
 @WebService(endpointInterface = "services.flight_booking.FlightBooking")
 public class FlightBookingImpl implements FlightBooking {
+  public static final String HOST = "http://167.205.35.219:8080";
+
   public String bookFlight(String username, String flightNumber, Passenger[] passengers) {
+    try {
+      JSONObject variables = new JSONObject();
+      variables.append("username", new JSONObject());
+      variables.getJSONObject("username").append("value", username);
+      variables.getJSONObject("username").append("type", "string");
 
-    String booking_number = String.format("%d%s%s", new Date().getTime(), username, flightNumber);
-    Unirest.get(String.format("http://localhost:8000/flights/%s/", flightNumber))
-            .asJsonAsync(new Callback<JsonNode>() {
-              @Override
-              public void completed(HttpResponse<JsonNode> httpResponse) {
-                int newAvailableSeats = httpResponse.getBody().getObject().getInt("available_seats") - passengers.length;
-                Unirest.patch(String.format("http://localhost:8000/flights/%s/", flightNumber))
-                        .field("available_seats", newAvailableSeats).asJsonAsync(new Callback<JsonNode>() {
-                          @Override
-                            public void completed(HttpResponse<JsonNode> httpResponse) {
-                              if (httpResponse.getStatus() == 200) {
-                                com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
-                                try {
-                                  Unirest.post("http://localhost:8000/bookings/")
-                                          .field("number", booking_number)
-                                          .field("user", username)
-                                          .field("flight", flightNumber)
-                                          .field("passengers", mapper.writeValueAsString(passengers))
-                                          .asJsonAsync(new Callback<JsonNode>() {
-                                            @Override
-                                            public void completed(HttpResponse<JsonNode> httpResponse) {
-//                                                  Issue Invoice
-                                            }
+      variables.append("flight_number", new JSONObject());
+      variables.getJSONObject("flight_number").append("value", flightNumber);
+      variables.getJSONObject("flight_number").append("type", "string");
 
-                                            @Override
-                                            public void failed(UnirestException e) {
+      variables.append("passengers",new JSONObject());
+      variables.getJSONObject("passengers").append("value", new JSONArray());
+      variables.getJSONObject("passengers").append("type", "string");
 
-                                            }
+      for (Passenger passenger: passengers) {
+        variables.getJSONObject("passengers").getJSONObject("value").append("first_name", passenger.getFirstName());
+        variables.getJSONObject("passengers").getJSONObject("value").append("last_name", passenger.getLastName());
+      }
 
-                                            @Override
-                                            public void cancelled() {
+      JSONObject requestObject = new JSONObject();
+      requestObject.append("variables", variables);
+      HttpResponse<JsonNode> response = Unirest.post(String.format("%s/engine-rest/process-definition/key/BookFlight/start", HOST))
+              .body(requestObject).asJson();
 
-                                            }
-                                          });
-                                } catch(Exception e) {
-                                  e.printStackTrace();
-                                }
-                              }
-                            }
-
-                          @Override
-                          public void failed(UnirestException e) {
-                            e.printStackTrace();
-                          }
-
-                          @Override
-                          public void cancelled() {
-
-                          }
-                        });
-              }
-
-              @Override
-              public void failed(UnirestException e) {
-               e.printStackTrace();
-              }
-
-              @Override
-              public void cancelled() {
-
-              }
-            });
-
-    return booking_number;
+      return String.format("Booking succeed with number: %s", response.getBody().getObject().getString("id"));
+    } catch(Exception e) {
+      e.printStackTrace();
+    }
+    return "Booking failed";
   }
 
-  public void cancelBooking(String bookingNumber) {
-    Unirest.get(String.format("http://localhost:8000/bookings/%s/", bookingNumber)).asJsonAsync(new Callback<JsonNode>() {
-      @Override
-      public void completed(HttpResponse<JsonNode> httpResponse) {
-        JSONObject booking = httpResponse.getBody().getObject();
-        int passengerCount = booking.getJSONArray("passengers").length();
-        String flightNumber = booking.getString("flight");
-        Unirest.get(String.format("Http://localhost:8000/flights/%s/", flightNumber)).asJsonAsync(new Callback<JsonNode>() {
-          @Override
-          public void completed(HttpResponse<JsonNode> httpResponse) {
-            int newAvailableSeats = httpResponse.getBody().getObject().getInt("available_seats") + passengerCount;
-            Unirest.patch(String.format("Http://localhost:8000/flights/%s/", flightNumber))
-                    .field("available_seats", newAvailableSeats).asJsonAsync(new Callback<JsonNode>() {
-              @Override
-              public void completed(HttpResponse<JsonNode> httpResponse) {
-                try {
-                  Unirest.delete(String.format("http://localhost:8000/bookings/%s/", bookingNumber)).asJson();
-                } catch(Exception e) {
-                  e.printStackTrace();
-                }
-              }
+  public String cancelBooking(String bookingNumber) {
+    try {
+      JSONObject variables = new JSONObject();
 
-              @Override
-              public void failed(UnirestException e) {
-                e.printStackTrace();
-                System.out.println("get2");
-              }
+      variables.append("booking_number", new JSONObject());
+      variables.getJSONObject("booking_number").append("value", bookingNumber);
+      variables.getJSONObject("booking_number").append("type", "string");
 
-              @Override
-              public void cancelled() {
+      JSONObject requestObject = new JSONObject();
+      HttpResponse<JsonNode> response = Unirest.post(String.format(
+              "%s/engine-rest/process-definition/key/CancelBooking/start", HOST)).body(requestObject).asJson();
 
-              }
-            });
-          }
-
-          @Override
-          public void failed(UnirestException e) {
-            e.printStackTrace();
-            System.out.println("delete");
-          }
-
-          @Override
-          public void cancelled() {
-
-          }
-        });
-      }
-
-      @Override
-      public void failed(UnirestException e) {
-        e.printStackTrace();
-      }
-
-      @Override
-      public void cancelled() {
-
-      }
-    });
+      return String.format("Booking success with id: %s", response.getBody().getObject().getString("id"));
+    } catch(Exception e) {
+      e.printStackTrace();
+    }
+    return "Booking cancellation failed";
   }
 
-  public void rescheduleFlight(String bookingNumber, String newFlightNumber) {
-    Unirest.get(String.format("http://localhost:8000/bookings/%s/", bookingNumber))
-            .header("Connection", "keep-alive").asJsonAsync(new Callback<JsonNode>() {
-      @Override
-      public void completed(HttpResponse<JsonNode> httpResponse) {
-        JSONObject booking = httpResponse.getBody().getObject();
-        String oldFlightNumber = booking.getString("flight");
-        int passengerCount = booking.getJSONArray("passengers").length();
-        try {
-          Unirest.patch(String.format("http://localhost:8000/bookings/%s/", bookingNumber))
-                  .field("flight", newFlightNumber).asJson();
-        } catch(Exception e) {
-          e.printStackTrace();
-        }
+  public String rescheduleFlight(String bookingNumber, String flightNumber) {
+    try {
+      JSONObject variables = new JSONObject();
 
-        Unirest.get(String.format("http://localhost:8000/flights/%s/", oldFlightNumber)).asJsonAsync(new Callback<JsonNode>() {
-          @Override
-          public void completed(HttpResponse<JsonNode> httpResponse) {
-            int oldFlightNewAvailableSeats = httpResponse.getBody().getObject().getInt("available_seats") + passengerCount;
-            try {
-              Unirest.patch(String.format("http://localhost:8000/flights/%s/", oldFlightNumber))
-                      .field("available_seats", oldFlightNewAvailableSeats).asJsonAsync(new Callback<JsonNode>() {
-                @Override
-                public void completed(HttpResponse<JsonNode> httpResponse) {
+      variables.append("booking_number", new JSONObject());
+      variables.getJSONObject("booking_number").append("value", bookingNumber);
+      variables.getJSONObject("booking_number").append("type", "string");
 
-                }
+      variables.append("flight_number", new JSONObject());
+      variables.getJSONObject("flight_number").append("value", flightNumber);
+      variables.getJSONObject("flight_number").append("type", "string");
 
-                @Override
-                public void failed(UnirestException e) {
+      JSONObject requestObject = new JSONObject();
+      HttpResponse<JsonNode> response = Unirest.post(String.format(
+              "%s/engine-rest/process-definition/key/RescheduleBooking/start", HOST)).body(requestObject).asJson();
 
-                }
-
-                @Override
-                public void cancelled() {
-
-                }
-              });
-            } catch(Exception e) {
-              e.printStackTrace();
-            }
-          }
-
-          @Override
-          public void failed(UnirestException e) {
-            e.printStackTrace();
-          }
-
-          @Override
-          public void cancelled() {
-
-          }
-        });
-
-        Unirest.get(String.format("http://localhost:8000/flights/%s/", newFlightNumber)).asJsonAsync(new Callback<JsonNode>() {
-          @Override
-          public void completed(HttpResponse<JsonNode> httpResponse) {
-            int newFlightNewAvailableSeats = httpResponse.getBody().getObject().getInt("available_seats") - passengerCount;
-            try {
-              Unirest.patch(String.format("http://localhost:8000/flights/%s/", newFlightNumber))
-                      .field("available_seats", newFlightNewAvailableSeats).asJsonAsync(new Callback<JsonNode>() {
-                @Override
-                public void completed(HttpResponse<JsonNode> httpResponse) {
-
-                }
-
-                @Override
-                public void failed(UnirestException e) {
-
-                }
-
-                @Override
-                public void cancelled() {
-
-                }
-              });
-            } catch(Exception e) {
-              e.printStackTrace();
-            }
-          }
-
-          @Override
-          public void failed(UnirestException e) {
-            e.printStackTrace();
-          }
-
-          @Override
-          public void cancelled() {
-
-          }
-        });
-      }
-
-      @Override
-      public void failed(UnirestException e) {
-        e.printStackTrace();
-      }
-
-      @Override
-      public void cancelled() {
-
-      }
-    });
+      return String.format("Booking success with id: %s", response.getBody().getObject().getString("id"));
+    } catch(Exception e) {
+      e.printStackTrace();
+    }
+    return "Booking reschedule failed";
   }
 
 }
